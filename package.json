@@ -84,14 +84,17 @@
     "titleTemplate": "{title}"
   },
   "lint-staged": {
-    "**/*.{yml,ts,json}": [
-      "prettier --write"
-    ]
+    "*.{yml,json}": "prettier --write",
+    "*.ts": [
+      "prettier --write",
+      "eslint --cache --fix",
+      "NODE_ENV=testing jest --bail --findRelatedTests --passWithNoTests"
+    ],
+    "*.js": "eslint --cache --fix"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn build; git add dist",
-      "pre-add": "yarn format"
+      "pre-commit": "lint-staged"
     }
   }
 }

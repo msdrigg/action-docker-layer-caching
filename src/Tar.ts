@@ -1,6 +1,5 @@
 import {promises as fs} from 'fs'
 import * as path from 'path'
-import {assertType} from 'typescript-is'
 
 export interface Manifest {
   Config: string
@@ -10,9 +9,6 @@ export interface Manifest {
 
 export type Manifests = Manifest[]
 
-export function assertManifests(x: unknown): asserts x is Manifests {
-  assertType<Manifests>(x)
-}
 
 export async function loadRawManifests(rootPath: string): Promise<string> {
   return (await fs.readFile(path.join(rootPath, `manifest.json`))).toString()
@@ -21,6 +17,5 @@ export async function loadRawManifests(rootPath: string): Promise<string> {
 export async function loadManifests(manifestPath: string): Promise<Manifests> {
   const raw = await loadRawManifests(manifestPath)
   const manifests = JSON.parse(raw.toString())
-  assertManifests(manifests)
   return manifests
 }

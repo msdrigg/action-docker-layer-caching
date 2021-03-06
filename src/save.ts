@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import {assertType} from 'typescript-is'
 
 import {ImageDetector} from './ImageDetector'
 import {LayerCache} from './LayerCache'
@@ -13,17 +12,12 @@ async function run(): Promise<void> {
 
     const primaryKey = core.getInput('key', {required: true})
 
-    const restoredKey: string = JSON.parse(core.getState(`restored-key`))
     const alreadyExistingImages: string[] = JSON.parse(
       core.getState(`already-existing-images`)
     )
     const restoredImages: string[] = JSON.parse(
       core.getState(`restored-images`)
     )
-
-    assertType<string>(restoredKey)
-    assertType<string[]>(alreadyExistingImages)
-    assertType<string[]>(restoredImages)
 
     const imageDetector = new ImageDetector()
 

@@ -50192,13 +50192,14 @@ class ImageDetector {
     async getExistingImages() {
         core.debug(`Existing Images:`);
         const _filter = core.getInput(`filter`);
-        const filter = _filter ? `--filter=${_filter}` : '';
-        const cmd = new CommandHelper_1.CommandHelper(process.cwd(), `docker image ls --format='{{.ID}},{{.Repository}}:{{.Tag}}' --filter=dangling=false ${filter}`, undefined);
+        const filter = _filter ? `"--filter=${_filter.replace('"', '\"')}"` : '';
+        const cmd = new CommandHelper_1.CommandHelper(process.cwd(), `docker image ls "--format={{.ID}} {{.Repository}}:{{.Tag}}" "--filter=dangling=false" ${filter}`, undefined);
         const existingImages = {};
         const output = await cmd.exec();
         const images = output.stdout.split('\n');
         for (const image of images) {
-            const [key, value] = image.split(',');
+            const [key, value] = image.split(' ');
+            core.debug(`  Image ID: ${key}, Image Tag: ${value}`);
             existingImages[key] = value;
         }
         return existingImages;

@@ -10,17 +10,18 @@ export class ImageDetector {
   async getExistingImages(): Promise<dockerImage> {
     core.debug(`Existing Images:`)
     const _filter = core.getInput(`filter`)
-    const filter = _filter ? `--filter=${_filter}` : ''
+    const filter = _filter ? `"--filter=${_filter.replace('"', '\"')}"` : ''
     const cmd = new CommandHelper(
       process.cwd(),
-      `docker image ls --format='{{.ID}},{{.Repository}}:{{.Tag}}' --filter=dangling=false ${filter}`,
+      `docker image ls "--format={{.ID}} {{.Repository}}:{{.Tag}}" "--filter=dangling=false" ${filter}`,
       undefined
     )
     const existingImages: dockerImage = {}
     const output = await cmd.exec()
     const images = output.stdout.split('\n')
     for (const image of images) {
-      const [key, value] = image.split(',')
+      const [key, value] = image.split(' ')
+      core.debug(`  Image ID: ${key}, Image Tag: ${value}`)
       existingImages[key] = value
     }
 

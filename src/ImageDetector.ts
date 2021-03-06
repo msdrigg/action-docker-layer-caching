@@ -16,9 +16,10 @@ export class ImageDetector {
       `docker image ls "--format={{.ID}} {{.Repository}}:{{.Tag}}" "--filter=dangling=false" ${filter}`,
       undefined
     )
+    core.debug(JSON.stringify(cmd))
     const existingImages: dockerImage = {}
     const output = await cmd.exec()
-    const images = output.stdout.split('\n')
+    const images = output.stdout.split('\n').filter(key => key !== ``)
     for (const image of images) {
       const [key, value] = image.split(' ')
       core.debug(`  Image ID: ${key}, Image Tag: ${value}`)

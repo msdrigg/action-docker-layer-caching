@@ -4,6 +4,7 @@ const imageDetector = new ImageDetector()
 
 describe('Image Detector', () => {
   test('List all images', async () => {
+    process.env.INPUT_FILTER = 'reference=codacy/*'
     await imageDetector.getExistingImages()
   })
 })

@@ -57,7 +57,7 @@
     "format": "prettier --write src/ .github/ __tests__/",
     "format-check": "prettier --check src/**/*.ts",
     "lint": "eslint --fix **/*.ts --cache",
-    "build": "tsc && ncc build -o dist/restore src/restore.ts && ncc build -o dist/save src/save.ts",
+    "build": "rm -rf ./dist;tsc && ncc build -o dist/restore src/restore.ts && ncc build -o dist/save src/save.ts",
     "release": "yarn run format && yarn run lint && yarn run build && git add -f dist",
     "all": "yarn run build && yarn run format && yarn run lint && git add -f dist && yarn test"
   },

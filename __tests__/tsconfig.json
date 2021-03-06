@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "rootDir": "./__tests__"
+  }
+}

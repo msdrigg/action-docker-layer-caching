@@ -22,8 +22,12 @@ inputs:
     description: Skip saving layers in the post step
     required: false
     default: 'false'
+  filter:
+    description: A docker cli filter for which images to save
+    required: false
+
 
 runs:
   using: node12
-  main: main.ts
-  post: post.ts
+  main: dist/restore/index.js
+  post: dist/save/index.js

@@ -1,6 +1,6 @@
-import { assertType } from 'typescript-is' 
-import { promises as fs } from 'fs'
+import {promises as fs} from 'fs'
 import * as path from 'path'
+import {assertType} from 'typescript-is'
 
 export interface Manifest {
   Config: string
@@ -14,12 +14,12 @@ export function assertManifests(x: unknown): asserts x is Manifests {
   assertType<Manifests>(x)
 }
 
-export async function loadRawManifests(rootPath: string) {
+export async function loadRawManifests(rootPath: string): Promise<string> {
   return (await fs.readFile(path.join(rootPath, `manifest.json`))).toString()
 }
 
-export async function loadManifests(path: string) {
-  const raw = await loadRawManifests(path)
+export async function loadManifests(manifestPath: string): Promise<Manifests> {
+  const raw = await loadRawManifests(manifestPath)
   const manifests = JSON.parse(raw.toString())
   assertManifests(manifests)
   return manifests

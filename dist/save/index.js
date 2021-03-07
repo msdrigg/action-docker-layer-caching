@@ -49028,7 +49028,7 @@ class LayerCache {
     }
     async makeRepotagsDockerSaveArgReady(repotags) {
         const getMiddleIdsWithRepotag = async (id) => {
-            return [id, ...(await this.getAllImageIdsFrom(id))];
+            return [id.replace(`'`, ``), ...(await this.getAllImageIdsFrom(id))];
         };
         return (await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat();
     }

@@ -49337,14 +49337,15 @@ async function run() {
         const imageDetector = new ImageDetector_1.ImageDetector();
         //* Get any existing images and tags from docker so we don't waste
         //  time restoring something thats already available
-        const alreadyExistingImages = await imageDetector.getExistingImages();
-        core.saveState(`already-existing-images`, JSON.stringify(Object.keys(alreadyExistingImages)));
+        const alreadyExistingImagesObject = await imageDetector.getExistingImages();
+        const alreadyExistingImages = [...Object.keys(alreadyExistingImagesObject), ...Object.values(alreadyExistingImagesObject)];
+        core.saveState(`already-existing-images`, JSON.stringify(alreadyExistingImages));
         const layerCache = new LayerCache_1.LayerCache([]);
         layerCache.concurrency = parseInt(core.getInput(`concurrency`, { required: true }), 10);
         const restoredKey = await layerCache.restore(primaryKey, restoreKeys);
         await layerCache.cleanUp();
         core.saveState(`restored-key`, JSON.stringify(restoredKey || ''));
-        core.saveState(`restored-images`, JSON.stringify(await imageDetector.getImagesShouldSave(Object.keys(alreadyExistingImages))));
+        core.saveState(`restored-images`, JSON.stringify(await imageDetector.getImagesShouldSave(alreadyExistingImages)));
     }
     catch (e) {
         core.saveState(`restored-key`, JSON.stringify(``));

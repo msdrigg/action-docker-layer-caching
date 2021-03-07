@@ -93,7 +93,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged;yarn build"
+      "pre-commit": "lint-staged;yarn build;git add dist"
     }
   }
 }

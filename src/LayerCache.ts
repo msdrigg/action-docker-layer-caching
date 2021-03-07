@@ -47,9 +47,9 @@ class LayerCache {
     await fs.mkdir(this.getUnpackedTarDir(), {recursive: true})
     const result = await new CommandHelper(this.getUnpackedTarDir(), 'bash', [
       '-c',
-      `"docker save ${(
+      `"docker save '${(
         await this.makeRepotagsDockerSaveArgReady(this.ids)
-      ).join(` `)}' | tar xf - -C ."`
+      ).join(`' '`)}' | tar xf - -C ."`
     ]).exec()
     return result.exitCode
   }

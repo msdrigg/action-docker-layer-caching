@@ -67,7 +67,7 @@ class LayerCache {
     const result = await new CommandHelper(this.getUnpackedTarDir(), 'docker', [
       'history',
       '-q',
-      ...repotag
+      repotag
     ]).exec()
 
     const historyIds = result.stdout

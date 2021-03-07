@@ -1,13 +1,13 @@
 import * as core from '@actions/core'
 
-import {ImageDetector} from './ImageDetector'
-import {LayerCache} from './LayerCache'
+import { ImageDetector } from './ImageDetector'
+import { LayerCache } from './LayerCache'
 
 async function run(): Promise<void> {
   try {
-    const primaryKey = core.getInput(`key`, {required: true})
+    const primaryKey = core.getInput(`key`, { required: true })
     const restoreKeys = core
-      .getInput(`restore-keys`, {required: false})
+      .getInput(`restore-keys`, { required: false })
       ?.split(`\n`)
       .filter(key => key !== ``)
 
@@ -16,15 +16,16 @@ async function run(): Promise<void> {
     //* Get any existing images and tags from docker so we don't waste
     //  time restoring something thats already available
 
-    const alreadyExistingImages = await imageDetector.getExistingImages()
+    const alreadyExistingImagesObject = await imageDetector.getExistingImages()
+    const alreadyExistingImages = [...Object.keys(alreadyExistingImagesObject), ...Object.values(alreadyExistingImagesObject)]
     core.saveState(
       `already-existing-images`,
-      JSON.stringify(Object.keys(alreadyExistingImages))
+      JSON.stringify(alreadyExistingImages)
     )
 
     const layerCache = new LayerCache([])
     layerCache.concurrency = parseInt(
-      core.getInput(`concurrency`, {required: true}),
+      core.getInput(`concurrency`, { required: true }),
       10
     )
 
@@ -36,7 +37,7 @@ async function run(): Promise<void> {
       `restored-images`,
       JSON.stringify(
         await imageDetector.getImagesShouldSave(
-          Object.keys(alreadyExistingImages)
+          alreadyExistingImages
         )
       )
     )

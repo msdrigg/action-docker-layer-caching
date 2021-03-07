@@ -48947,7 +48947,7 @@ class ImageDetector {
                 delete resultSet.image;
             }
         }
-        return Object.keys(resultSet);
+        return [...Object.keys(resultSet), ...Object.values(resultSet)];
     }
 }
 exports.ImageDetector = ImageDetector;

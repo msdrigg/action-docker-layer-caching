@@ -49019,14 +49019,16 @@ class LayerCache {
         try {
             return await promise;
         }
-        catch (e) {
-            core.debug(`catch error: ${e.toString()}`);
-            if (typeof e.message !== 'string' || !e.message.includes(dismissStr)) {
-                core.error(`Unexpected error: ${e.toString()}`);
-                throw e;
+        catch (error) {
+            if (error.name === cache.ValidationError.name) {
+                throw error;
             }
-            core.info(`${dismissStr}: ${e.toString()}`);
-            core.debug(e);
+            else if (error.name === cache.ReserveCacheError.name) {
+                core.info(error.message);
+            }
+            else {
+                core.warning(error.message);
+            }
             return defaultResult;
         }
     }

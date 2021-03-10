@@ -76,3 +76,8 @@ export class CommandOutput {
   stderr = ''
   exitCode = 0
 }
+
+export enum CommandExitCode {
+  SUCCESS,
+  ERROR
+}

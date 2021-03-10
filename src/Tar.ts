@@ -9,7 +9,6 @@ export interface Manifest {
 
 export type Manifests = Manifest[]
 
-
 export async function loadRawManifests(rootPath: string): Promise<string> {
   return (await fs.readFile(path.join(rootPath, `manifest.json`))).toString()
 }

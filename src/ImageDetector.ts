@@ -10,19 +10,19 @@ export class ImageDetector {
   async getExistingImages(): Promise<dockerImage> {
     core.debug(`Existing Images:`)
     const _filter = core.getInput(`filter`)
-    const filter = _filter ? `"--filter=${_filter.replace('"', '\"')}"` : ''
-    const cmd = new CommandHelper(
-      process.cwd(),
-      `docker image ls "--format={{.ID}} {{.Repository}}:{{.Tag}}" "--filter=dangling=false" ${filter}`,
-      undefined
-    )
-    core.debug(JSON.stringify(cmd))
+    const filter = _filter ? `--filter=${_filter}` : ''
+    const cmd = new CommandHelper(process.cwd(), `docker`, [
+      'image',
+      'ls',
+      '--format={{.ID}} {{.Repository}}:{{.Tag}}',
+      '--filter=dangling=false',
+      filter
+    ])
     const existingImages: dockerImage = {}
     const output = await cmd.exec()
     const images = output.stdout.split('\n').filter(key => key !== ``)
     for (const image of images) {
       const [key, value] = image.split(' ')
-      core.debug(`  Image ID: ${key}, Image Tag: ${value}`)
       existingImages[key] = value
     }
 
@@ -38,6 +38,6 @@ export class ImageDetector {
         delete resultSet.image
       }
     }
-    return [...Object.keys(resultSet),...Object.values(resultSet)]
+    return [...Object.keys(resultSet), ...Object.values(resultSet)]
   }
 }

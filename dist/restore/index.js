@@ -36415,79 +36415,6 @@ __export(__nccwpck_require__(2331));
 
 /***/ }),
 
-/***/ 7231:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const actionsExec = __importStar(__nccwpck_require__(1514));
-exports.exec = async (command, args, options) => {
-    const originalListeners = options === null || options === void 0 ? void 0 : options.listeners;
-    let stdout = Buffer.concat([], 0);
-    let stderr = Buffer.concat([], 0);
-    let stdline = '';
-    let errline = '';
-    let debug = '';
-    const listeners = {
-        stdout: (data) => {
-            const concatData = [stdout, data];
-            const concatLength = stdout.length + data.length;
-            stdout = Buffer.concat(concatData, concatLength);
-            if ((originalListeners === null || originalListeners === void 0 ? void 0 : originalListeners.stdout) != null) {
-                originalListeners.stdout(data);
-            }
-        },
-        stderr: (data) => {
-            const concatData = [stderr, data];
-            const concatLength = stderr.length + data.length;
-            stderr = Buffer.concat(concatData, concatLength);
-            if ((originalListeners === null || originalListeners === void 0 ? void 0 : originalListeners.stderr) != null) {
-                originalListeners.stderr(data);
-            }
-        },
-        stdline: (data) => {
-            stdline += data.toString();
-            if ((originalListeners === null || originalListeners === void 0 ? void 0 : originalListeners.stdline) != null) {
-                originalListeners.stdline(data);
-            }
-        },
-        errline: (data) => {
-            stdline += data.toString();
-            if ((originalListeners === null || originalListeners === void 0 ? void 0 : originalListeners.errline) != null) {
-                originalListeners.errline(data);
-            }
-        },
-        debug: (data) => {
-            stdline += data.toString();
-            if ((originalListeners === null || originalListeners === void 0 ? void 0 : originalListeners.debug) != null) {
-                originalListeners.debug(data);
-            }
-        }
-    };
-    const exitCode = await actionsExec.exec(command, args, Object.assign(Object.assign({}, options), { listeners }));
-    return {
-        exitCode,
-        stdout,
-        stdoutStr: stdout.toString(),
-        stderr,
-        stderrStr: stderr.toString(),
-        stdline,
-        errline,
-        debug,
-    };
-};
-
-
-/***/ }),
-
 /***/ 4812:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -48828,7 +48755,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CommandOutput = exports.CommandHelper = void 0;
+exports.CommandExitCode = exports.CommandOutput = exports.CommandHelper = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 class CommandHelper {
     constructor(workingDirectory, command, args) {
@@ -48891,6 +48818,11 @@ class CommandOutput {
     }
 }
 exports.CommandOutput = CommandOutput;
+var CommandExitCode;
+(function (CommandExitCode) {
+    CommandExitCode[CommandExitCode["SUCCESS"] = 0] = "SUCCESS";
+    CommandExitCode[CommandExitCode["ERROR"] = 1] = "ERROR";
+})(CommandExitCode = exports.CommandExitCode || (exports.CommandExitCode = {}));
 
 
 /***/ }),
@@ -48927,15 +48859,19 @@ class ImageDetector {
     async getExistingImages() {
         core.debug(`Existing Images:`);
         const _filter = core.getInput(`filter`);
-        const filter = _filter ? `"--filter=${_filter.replace('"', '\"')}"` : '';
-        const cmd = new CommandHelper_1.CommandHelper(process.cwd(), `docker image ls "--format={{.ID}} {{.Repository}}:{{.Tag}}" "--filter=dangling=false" ${filter}`, undefined);
-        core.debug(JSON.stringify(cmd));
+        const filter = _filter ? `--filter=${_filter}` : '';
+        const cmd = new CommandHelper_1.CommandHelper(process.cwd(), `docker`, [
+            'image',
+            'ls',
+            '--format={{.ID}} {{.Repository}}:{{.Tag}}',
+            '--filter=dangling=false',
+            filter
+        ]);
         const existingImages = {};
         const output = await cmd.exec();
         const images = output.stdout.split('\n').filter(key => key !== ``);
         for (const image of images) {
             const [key, value] = image.split(' ');
-            core.debug(`  Image ID: ${key}, Image Tag: ${value}`);
             existingImages[key] = value;
         }
         return existingImages;
@@ -48986,7 +48922,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LayerCache = void 0;
 const cache = __importStar(__nccwpck_require__(7799));
 const core = __importStar(__nccwpck_require__(2186));
-const exec = __importStar(__nccwpck_require__(7231));
 const crypto_1 = __importDefault(__nccwpck_require__(6417));
 const fs_1 = __nccwpck_require__(5747);
 const native_promise_pool_1 = __importDefault(__nccwpck_require__(6852));
@@ -49022,7 +48957,7 @@ class LayerCache {
         await fs_1.promises.mkdir(this.getUnpackedTarDir(), { recursive: true });
         const result = await new CommandHelper_1.CommandHelper(this.getUnpackedTarDir(), 'bash', [
             '-c',
-            `"docker save '${(await this.makeRepotagsDockerSaveArgReady(this.ids)).join(`' '`)}' | tar xf - -C ."`
+            `docker save '${(await this.makeRepotagsDockerSaveArgReady(this.ids)).join(`' '`)}' | tar xf - -C .`
         ]).exec();
         return result.exitCode;
     }
@@ -49030,7 +48965,7 @@ class LayerCache {
         const getMiddleIdsWithRepotag = async (id) => {
             return [id.replace(`'`, ``), ...(await this.getAllImageIdsFrom(id))];
         };
-        return (await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat();
+        return Array.from(new Set((await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat()));
     }
     async getAllImageIdsFrom(repotag) {
         const result = await new CommandHelper_1.CommandHelper(this.getUnpackedTarDir(), 'docker', [
@@ -49187,9 +49122,11 @@ class LayerCache {
         return result;
     }
     async loadImageFromUnpacked() {
-        await exec.exec(`sh -c`, [`tar cf - . | docker load`], {
-            cwd: this.getUnpackedTarDir()
-        });
+        const cmd = new CommandHelper_1.CommandHelper(this.getUnpackedTarDir(), `sh`, [
+            '-c',
+            'tar cf - . | docker load'
+        ]);
+        await cmd.exec();
     }
     async cleanUp() {
         await fs_1.promises.rmdir(this.getImagesDir(), { recursive: true });
@@ -49338,7 +49275,10 @@ async function run() {
         //* Get any existing images and tags from docker so we don't waste
         //  time restoring something thats already available
         const alreadyExistingImagesObject = await imageDetector.getExistingImages();
-        const alreadyExistingImages = [...Object.keys(alreadyExistingImagesObject), ...Object.values(alreadyExistingImagesObject)];
+        const alreadyExistingImages = [
+            ...Object.keys(alreadyExistingImagesObject),
+            ...Object.values(alreadyExistingImagesObject)
+        ];
         core.saveState(`already-existing-images`, JSON.stringify(alreadyExistingImages));
         const layerCache = new LayerCache_1.LayerCache([]);
         layerCache.concurrency = parseInt(core.getInput(`concurrency`, { required: true }), 10);

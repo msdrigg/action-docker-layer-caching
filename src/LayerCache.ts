@@ -1,6 +1,5 @@
 import * as cache from '@actions/cache'
 import * as core from '@actions/core'
-import * as exec from 'actions-exec-listener'
 import crypto from 'crypto'
 import {promises as fs} from 'fs'
 import PromisePool from 'native-promise-pool'
@@ -47,9 +46,9 @@ class LayerCache {
     await fs.mkdir(this.getUnpackedTarDir(), {recursive: true})
     const result = await new CommandHelper(this.getUnpackedTarDir(), 'bash', [
       '-c',
-      `"docker save '${(
+      `docker save '${(
         await this.makeRepotagsDockerSaveArgReady(this.ids)
-      ).join(`' '`)}' | tar xf - -C ."`
+      ).join(`' '`)}' | tar xf - -C .`
     ]).exec()
     return result.exitCode
   }
@@ -58,9 +57,11 @@ class LayerCache {
     repotags: string[]
   ): Promise<string[]> {
     const getMiddleIdsWithRepotag = async (id: string): Promise<string[]> => {
-      return [id.replace(`'`,``), ...(await this.getAllImageIdsFrom(id))]
+      return [id.replace(`'`, ``), ...(await this.getAllImageIdsFrom(id))]
     }
-    return (await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat()
+    return Array.from(
+      new Set((await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat())
+    )
   }
 
   private async getAllImageIdsFrom(repotag: string): Promise<string[]> {
@@ -289,9 +290,11 @@ class LayerCache {
   }
 
   private async loadImageFromUnpacked(): Promise<void> {
-    await exec.exec(`sh -c`, [`tar cf - . | docker load`], {
-      cwd: this.getUnpackedTarDir()
-    })
+    const cmd = new CommandHelper(this.getUnpackedTarDir(), `sh`, [
+      '-c',
+      'tar cf - . | docker load'
+    ])
+    await cmd.exec()
   }
 
   async cleanUp(): Promise<void> {

@@ -48867,23 +48867,19 @@ class ImageDetector {
             '--filter=dangling=false',
             filter
         ]);
-        const existingImages = {};
+        const existingImages = new Set();
         const output = await cmd.exec();
         const images = output.stdout.split('\n').filter(key => key !== ``);
         for (const image of images) {
             const [key, value] = image.split(' ');
-            existingImages[key] = value;
+            existingImages.add(key);
+            existingImages.add(value);
         }
-        return existingImages;
+        return Array.from(existingImages);
     }
     async getImagesShouldSave(alreadyRegisteredImages) {
         const resultSet = await this.getExistingImages();
-        for (const image of alreadyRegisteredImages) {
-            if (Object.prototype.hasOwnProperty.call(resultSet, image)) {
-                delete resultSet.image;
-            }
-        }
-        return [...Object.keys(resultSet), ...Object.values(resultSet)];
+        return resultSet.filter(item => alreadyRegisteredImages.indexOf(item) < 0);
     }
 }
 exports.ImageDetector = ImageDetector;
@@ -48963,7 +48959,7 @@ class LayerCache {
     }
     async makeRepotagsDockerSaveArgReady(repotags) {
         const getMiddleIdsWithRepotag = async (id) => {
-            return [id.replace(`'`, ``), ...(await this.getAllImageIdsFrom(id))];
+            return [id, ...(await this.getAllImageIdsFrom(id))];
         };
         return Array.from(new Set((await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat()));
     }
@@ -49276,11 +49272,7 @@ async function run() {
         const imageDetector = new ImageDetector_1.ImageDetector();
         //* Get any existing images and tags from docker so we don't waste
         //  time restoring something thats already available
-        const alreadyExistingImagesObject = await imageDetector.getExistingImages();
-        const alreadyExistingImages = [
-            ...Object.keys(alreadyExistingImagesObject),
-            ...Object.values(alreadyExistingImagesObject)
-        ];
+        const alreadyExistingImages = await imageDetector.getExistingImages();
         core.saveState(`already-existing-images`, JSON.stringify(alreadyExistingImages));
         const layerCache = new LayerCache_1.LayerCache([]);
         layerCache.concurrency = parseInt(core.getInput(`concurrency`, { required: true }), 10);

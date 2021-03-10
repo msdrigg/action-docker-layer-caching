@@ -57,7 +57,7 @@ class LayerCache {
     repotags: string[]
   ): Promise<string[]> {
     const getMiddleIdsWithRepotag = async (id: string): Promise<string[]> => {
-      return [id.replace(`'`, ``), ...(await this.getAllImageIdsFrom(id))]
+      return [id, ...(await this.getAllImageIdsFrom(id))]
     }
     return Array.from(
       new Set((await Promise.all(repotags.map(getMiddleIdsWithRepotag))).flat())

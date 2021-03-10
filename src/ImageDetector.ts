@@ -2,12 +2,8 @@ import * as core from '@actions/core'
 
 import {CommandHelper} from './CommandHelper'
 
-export interface dockerImage {
-  [key: string]: string
-}
-
 export class ImageDetector {
-  async getExistingImages(): Promise<dockerImage> {
+  async getExistingImages(): Promise<string[]> {
     core.debug(`Existing Images:`)
     const _filter = core.getInput(`filter`)
     const filter = _filter ? `--filter=${_filter}` : ''
@@ -18,26 +14,22 @@ export class ImageDetector {
       '--filter=dangling=false',
       filter
     ])
-    const existingImages: dockerImage = {}
+    const existingImages = new Set<string>()
     const output = await cmd.exec()
     const images = output.stdout.split('\n').filter(key => key !== ``)
     for (const image of images) {
       const [key, value] = image.split(' ')
-      existingImages[key] = value
+      existingImages.add(key)
+      existingImages.add(value)
     }
 
-    return existingImages
+    return Array.from(existingImages)
   }
 
   async getImagesShouldSave(
     alreadyRegisteredImages: string[]
   ): Promise<string[]> {
     const resultSet = await this.getExistingImages()
-    for (const image of alreadyRegisteredImages) {
-      if (Object.prototype.hasOwnProperty.call(resultSet, image)) {
-        delete resultSet.image
-      }
-    }
-    return [...Object.keys(resultSet), ...Object.values(resultSet)]
+    return resultSet.filter(item => alreadyRegisteredImages.indexOf(item) < 0)
   }
 }

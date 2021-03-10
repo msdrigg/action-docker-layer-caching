@@ -16,11 +16,8 @@ async function run(): Promise<void> {
     //* Get any existing images and tags from docker so we don't waste
     //  time restoring something thats already available
 
-    const alreadyExistingImagesObject = await imageDetector.getExistingImages()
-    const alreadyExistingImages = [
-      ...Object.keys(alreadyExistingImagesObject),
-      ...Object.values(alreadyExistingImagesObject)
-    ]
+    const alreadyExistingImages = await imageDetector.getExistingImages()
+
     core.saveState(
       `already-existing-images`,
       JSON.stringify(alreadyExistingImages)

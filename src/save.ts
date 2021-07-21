@@ -15,27 +15,17 @@ async function run(): Promise<void> {
     const alreadyExistingImages: string[] = JSON.parse(
       core.getState(`already-existing-images`)
     )
-    const restoredImages: string[] = JSON.parse(
-      core.getState(`restored-images`)
-    )
 
     const imageDetector = new ImageDetector()
-
-    const existingAndRestoredImages = alreadyExistingImages.concat(
-      restoredImages
-    )
-    const newImages = await imageDetector.getImagesShouldSave(
-      existingAndRestoredImages
-    )
-
-    if (newImages.length < 1) {
-      core.info(`There is no image to save.`)
-      return
-    }
 
     const imagesToSave = await imageDetector.getImagesShouldSave(
       alreadyExistingImages
     )
+
+    if (imagesToSave.length < 1) {
+      core.info(`There is no image to save.`)
+      return
+    }
     const layerCache = new LayerCache(imagesToSave)
     layerCache.concurrency = parseInt(
       core.getInput(`concurrency`, {required: true}),
